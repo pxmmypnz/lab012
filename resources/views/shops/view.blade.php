@@ -1,30 +1,41 @@
 @extends('shops.main', ['title' => $shop->name])
+
 @section('header')
     @parent
 
-    <nav class="app-cmp-record-actions" aria-label="Shop actions">
-        <a class="app-cl-action app-cl-filter" href="{{ route('shops.view-products', ['shop' => $shop->code]) }}">
-            View Products
-        </a>
+    <div class="app-cmp-form-actions">
+        <nav aria-label="Shop actions" class="app-cmp-form-actions">
+            @php
+                session()->put('bookmarks.shops.view-products', url()->full());
+            @endphp
 
-        <a class="app-cl-action app-cl-filter"
-            href="{{ route('shops.update-form', [
-                'shop' => $shop->code,
-            ]) }}">
-            Update
-        </a>
+            <a class="app-cl-button app-cl-primary app-cl-filled"
+                href="{{ route('shops.view-products', ['shop' => $shop->code]) }}">
+                View Products
+            </a>
 
-        <form action="{{ route('shops.delete', [
-            'shop' => $shop->code,
-        ]) }}" method="post">
-            @csrf
+            @php
+                session()->put('bookmarks.shops.update-form', url()->full());
+            @endphp
 
-            <button class="app-cl-action app-cl-clear" type="submit">
-                Delete
-            </button>
-        </form>
-    </nav>
+            <a class="app-cl-button" href="{{ route('shops.update-form', ['shop' => $shop->code]) }}">
+                Update
+            </a>
+
+            @php
+                session()->put('bookmarks.shops.delete', url()->full());
+            @endphp
+
+            <form action="{{ route('shops.delete', ['shop' => $shop->code]) }}" method="post" style="display: inline;">
+                @csrf
+                <button class="app-cl-button app-cl-warnning app-cl-filled" type="submit">
+                    Delete
+                </button>
+            </form>
+        </nav>
+    </div>
 @endsection
+
 @section('content')
     <dl class="app-cmp-data-detail">
         <dt>Code</dt>
@@ -38,8 +49,7 @@
 
         <dt>Location</dt>
         <dd>
-            <span class="app-cl-number">{{ $shop->latitude }}</span>
-            <b>,</b>
+            <span class="app-cl-number">{{ $shop->latitude }}</span>,
             <span class="app-cl-number">{{ $shop->longitude }}</span>
         </dd>
 

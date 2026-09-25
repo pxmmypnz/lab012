@@ -1,10 +1,18 @@
 @extends('products.main', ['title' => $product->name])
 
+@php
+    session()->put('bookmarks.products.delete', session()->get('bookmarks.products.view'));
+@endphp
+
 @section('header')
     @parent
 
     <div class="app-cmp-form-actions">
         <nav aria-label="Product actions" class="app-cmp-form-actions">
+            <a class="app-cl-button" href="{{ session()->get('bookmarks.products.view') ?? route('products.list') }}">
+                &lt; Back
+            </a>
+
             <a class="app-cl-button app-cl-primary" href="{{ route('products.view-shops', ['product' => $product->code]) }}">
                 View Shops
             </a>
@@ -37,9 +45,6 @@
 
         <dt>Category</dt>
         <dd>
-            <a class="app-cl-code" href="{{ route('categories.view', ['category' => $product->category->code]) }}">
-                [{{ $product->category->code }}]
-            </a>
             {{ $product->category->name }}
         </dd>
 

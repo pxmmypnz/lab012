@@ -32,6 +32,11 @@
     </header>
 
     <main id="app-main-content">
+        <div class="app-cmp-notifications">
+            @session('status')
+                <div role="status">{{ $value }}</div>
+            @endsession
+        </div>
         <header>
             @yield('header')
         </header>
@@ -39,7 +44,7 @@
     </main>
 
     <footer id="app-main-footer">
-        &#xA9; Copyright Phanu's Database.
+        &#xA9; Copyright Pamila's Database.
     </footer>
 </body>
 

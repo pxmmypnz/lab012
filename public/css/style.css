@@ -201,6 +201,32 @@ fieldset legend {
     border: 1px solid #767676;
 }
 
+/* Search Filter Form Layout */
+form.app-cmp-search-filter {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--app-gap);
+    margin-top: var(--app-gap);
+    margin-bottom: var(--app-gap);
+}
+
+form.app-cmp-search-filter label {
+    font-weight: normal;
+}
+
+form.app-cmp-search-filter input[type="text"],
+form.app-cmp-search-filter input[type="number"],
+form.app-cmp-search-filter select {
+    padding: 2px 4px;
+    border: 1px solid #767676;
+}
+
+form.app-cmp-search-filter .app-cmp-form-actions {
+    width: 100%;
+    margin-top: var(--app-gap);
+}
+
 .app-cmp-options {
     display: inline-grid;
     grid-template-columns: repeat(auto-fill, minmax(var(--app-cmp-option-min, 15ch), 1fr));

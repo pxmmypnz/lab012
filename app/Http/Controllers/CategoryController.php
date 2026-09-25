@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use Psr\Http\Message\ServerRequestInterface;
@@ -23,12 +22,11 @@ class CategoryController extends SearchableController
     {
         return [
             'term' => [
-                'code' =>
-                static fn(Builder $query, string $word)
-                => $query->where('code', 'LIKE', "%{$word}%"),
-                'name' =>
-                static fn(Builder $query, string $word)
-                => $query->where('name', 'LIKE', "%{$word}%"),
+                'code' => static fn(Builder $query, string $word) =>
+                $query->where('code', 'LIKE', "%{$word}%"),
+
+                'name' => static fn(Builder $query, string $word) =>
+                $query->where('name', 'LIKE', "%{$word}%"),
             ],
         ];
     }
@@ -44,12 +42,12 @@ class CategoryController extends SearchableController
         ]);
     }
 
-    public function showCreateForm(): View
+    function showCreateForm(): View
     {
         return view('categories.create-form');
     }
 
-    public function create(ServerRequestInterface $request): RedirectResponse
+    function create(ServerRequestInterface $request): RedirectResponse
     {
         $category = Category::create($request->getParsedBody());
 
@@ -58,7 +56,7 @@ class CategoryController extends SearchableController
         ]);
     }
 
-    public function view(string $category): View
+    function view(string $category): View
     {
         $categoryModel = $this->find($category);
 
@@ -67,14 +65,14 @@ class CategoryController extends SearchableController
         ]);
     }
 
-    public function showUpdateForm(string $category): View
+    function showUpdateForm(string $category): View
     {
         return view('categories.update-form', [
             'category' => $this->find($category),
         ]);
     }
 
-    public function update(
+    function update(
         string $categoryCode,
         ServerRequestInterface $request,
     ): RedirectResponse {
@@ -87,59 +85,62 @@ class CategoryController extends SearchableController
         ]);
     }
 
-    public function delete(string $category): RedirectResponse
+    function delete(string $category): RedirectResponse
     {
         $this->find($category)->delete();
 
         return redirect()->route('categories.list');
     }
 
-    public function viewProducts(
+    /**
+     * View products that belong to the current category.
+     */
+    function viewProducts(
         string $categoryCode,
         ServerRequestInterface $request,
     ): View {
         $category = $this->find($categoryCode);
         $productController = resolve(ProductController::class);
         $criteria = $productController->prepareCriteria($request->getQueryParams());
-        $query = $category->products()->with('category')->withCount('shops');
-        $filterOptions = $productController->getFilterOptions();
-        unset($filterOptions['term']['category']);
+
+        $query = $category->products()
+            ->with(['category'])
+            ->withCount('shops');
+
         $productController->filter(
             $query,
             $criteria,
-            $filterOptions,
+            $productController->getFilterOptions(),
         );
 
         return view('categories.view-products', [
-            'category' => $category,
             'criteria' => $criteria,
-            'products' => $query->orderBy('code')->paginate(static::MAX_ITEMS),
+            'category' => $category,
+            'products' => $query->paginate(static::MAX_ITEMS),
         ]);
     }
 
-    private function filterOutProductByCategory(
-        Builder|Relation $productQuery,
-        Category $category,
-    ): void {
-        $productQuery->whereDoesntHave(
-            'category',
-            static function (Builder $categoryQuery) use ($category): void {
-                $categoryQuery->whereKey($category->getKey());
-            },
-        );
-    }
-
-    public function showAddProductsForm(
+    /**
+     * Display form/list to add products to the category.
+     * Excludes products already belonging to this specific category.
+     */
+    function showAddProductsForm(
         string $categoryCode,
         ServerRequestInterface $request,
     ): View {
         $category = $this->find($categoryCode);
         $productController = resolve(ProductController::class);
         $criteria = $productController->prepareCriteria($request->getQueryParams());
+
+        // Exclude products already associated with this category ID
         $query = $productController->getQuery()
-            ->with('category')
+            ->where(function (Builder $builder) use ($category) {
+                $builder->whereNull('category_id')
+                    ->orWhere('category_id', '!=', $category->getKey());
+            })
+            ->with(['category'])
             ->withCount('shops');
-        $this->filterOutProductByCategory($query, $category);
+
         $productController->filter(
             $query,
             $criteria,
@@ -147,22 +148,23 @@ class CategoryController extends SearchableController
         );
 
         return view('categories.add-products-form', [
-            'category' => $category,
             'criteria' => $criteria,
+            'category' => $category,
             'products' => $query->paginate(static::MAX_ITEMS),
         ]);
     }
 
-    public function addProduct(
+    /**
+     * Associate product with category.
+     */
+    function addProduct(
         string $categoryCode,
         ServerRequestInterface $request,
     ): RedirectResponse {
         $category = $this->find($categoryCode);
-        $productController = resolve(ProductController::class);
         $data = $request->getParsedBody();
-        $product = $productController->getQuery()
-            ->where('code', $data['product'])
-            ->firstOrFail();
+
+        $product = Product::where('code', $data['product'])->firstOrFail();
         $product->category()->associate($category);
         $product->save();
 

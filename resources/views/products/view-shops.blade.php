@@ -3,53 +3,60 @@
 @section('header')
     @parent
 
-    <search>
-        <form action="{{ route('products.view-shops', ['product' => $product->code]) }}" method="get"
-            class="app-cmp-search-form">
-            <fieldset>
-                <legend>Search</legend>
+    <div class="app-cmp-form-actions">
+        <nav aria-label="Product shop actions" class="app-cmp-form-actions">
+            @php
+                session()->put('bookmarks.products.view', url()->full());
+            @endphp
 
-                <div class="app-cmp-search-fields">
-                    <label for="shop-search-term">Term</label>
-                    <input id="shop-search-term" type="search" name="term" value="{{ $criteria['term'] }}" />
-                </div>
 
-                <div class="app-cmp-search-actions">
-                    <button class="app-cl-action app-cl-filter" type="submit">Filter</button>
-                    <a class="app-cl-action app-cl-clear"
-                        href="{{ route('products.view-shops', ['product' => $product->code]) }}">Clear</a>
-                </div>
-            </fieldset>
-        </form>
-    </search>
+            @php
+                session()->put('bookmarks.products.add-shops-form', url()->full());
+            @endphp
 
-    <div class="app-cmp-links-bar">
-        <nav aria-label="Product actions">
-            <a class="app-cl-action app-cl-filter" href="{{ route('products.view', ['product' => $product->code]) }}">&lt;
-                Back</a>
-            <a class="app-cl-action app-cl-filter"
-                href="{{ route('products.add-shops-form', ['product' => $product->code]) }}">
-                Add Shops
-            </a>
+
             <form action="{{ route('products.remove-shop', ['product' => $product->code]) }}" id="app-form-remove-shop"
                 method="post">
                 @csrf
             </form>
         </nav>
-        {{ $shops->withQueryString()->links('vendor.pagination.compact') }}
     </div>
 @endsection
 
 @section('content')
+    <form action="{{ route('products.view-shops', ['product' => $product->code]) }}" method="get">
+        <fieldset>
+            <legend>Search</legend>
+
+            <div class="app-cmp-data-form">
+                <label for="shop-search-term">Term</label>
+                <input id="shop-search-term" type="text" name="term" value="{{ $criteria['term'] }}" />
+
+                <div class="app-cmp-form-actions">
+                    <button class="app-cl-button app-cl-primary app-cl-filled" type="submit">Filter</button>
+
+                    <div class="app-cmp-form-secondary-actions">
+                        <a class="app-cl-button app-cl-warnning app-cl-filled"
+                            href="{{ route('products.view-shops', ['product' => $product->code]) }}">Clear</a>
+                    </div>
+                </div>
+            </div>
+        </fieldset>
+    </form>
+    <a class="app-cl-button"
+        href="{{ session()->get('bookmarks.products.view') ?? route('products.view', ['product' => $product->code]) }}">
+        &lt; Back
+    </a>
+
+    <a class="app-cl-button app-cl-primary app-cl-filled"
+        href="{{ route('products.add-shops-form', ['product' => $product->code]) }}">
+        Add Shops
+    </a>
+
+    {{ $shops->links() }}
+
     <table class="app-cmp-data-list">
         <caption>List of Shops for {{ $product->name }}</caption>
-        <colgroup>
-            <col style="width: 10ch">
-            <col>
-            <col>
-            <col style="width: 14ch">
-            <col style="width: 12ch">
-        </colgroup>
         <thead>
             <tr>
                 <th>Code</th>
@@ -60,18 +67,23 @@
             </tr>
         </thead>
         <tbody>
+            @php
+                session()->put('bookmarks.shops.view', url()->full());
+            @endphp
+
             @foreach ($shops as $shop)
                 <tr>
-                    <th>
-                        <a class="app-cl-code app-cl-button app-cl-primary"
-                            href="{{ route('shops.view', ['shop' => $shop->code]) }}">{{ $shop->code }}</a>
+                    <th class="app-cl-code">
+                        <a href="{{ route('shops.view', ['shop' => $shop->code]) }}">
+                            {{ $shop->code }}
+                        </a>
                     </th>
                     <td>{{ $shop->name }}</td>
                     <td>{{ $shop->owner }}</td>
                     <td class="app-cl-number">{{ $shop->products_count }}</td>
-                    <td>
-                        <button class="app-cl-action app-cl-clear" type="submit" form="app-form-remove-shop" name="shop"
-                            value="{{ $shop->code }}">
+                    <td class="app-cl-action">
+                        <button class="app-cl-button app-cl-warnning app-cl-filled" type="submit"
+                            form="app-form-remove-shop" name="shop" value="{{ $shop->code }}">
                             Remove
                         </button>
                     </td>
@@ -79,4 +91,6 @@
             @endforeach
         </tbody>
     </table>
+
+    {{ $shops->links() }}
 @endsection

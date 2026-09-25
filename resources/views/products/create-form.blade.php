@@ -12,7 +12,7 @@
 
         <label for="product-category">Category *</label>
         <select id="product-category" name="category" required>
-            <option value="">Please Select Category</option>
+            <option value="">--- Please Select Category ---</option>
             @foreach ($categories as $category)
                 <option value="{{ $category->code }}" @selected(old('category') === $category->code)>
                     [{{ $category->code }}] {{ $category->name }}
@@ -28,6 +28,10 @@
 
         <div class="app-cmp-form-actions">
             <button class="app-cl-button app-cl-primary app-cl-filled" type="submit">Create</button>
+            <a class="app-cl-button"
+                href="{{ session()->get('bookmarks.products.create-form') ?? route('products.list') }}">
+                Cancel
+            </a>
         </div>
     </form>
 @endsection

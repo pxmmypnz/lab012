@@ -2,14 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Relations\Relation;
-use Psr\Http\Message\ServerRequestInterface;
 use App\Models\Category;
 use App\Models\Product;
-use App\Http\Controllers\ShopController;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
+use Psr\Http\Message\ServerRequestInterface;
 
 class ProductController extends SearchableController
 {
@@ -22,17 +21,18 @@ class ProductController extends SearchableController
     #[\Override()]
     function getFilterOptions(): array
     {
-        $options = parent::getFilterOptions();
-
         return [
             'term' => [
-                ...$options['term'],
-                'category' => static fn(Builder $query, string $word) =>
-                $query->whereHas(
-                    'category',
-                    static fn(Builder $categoryQuery) =>
-                    $categoryQuery->where('name', 'LIKE', "%{$word}%"),
-                ),
+                'code' => static fn(Builder $query, string $word) =>
+                $query->where('code', 'LIKE', "%{$word}%"),
+
+                'name' => static fn(Builder $query, string $word) =>
+                $query->where('name', 'LIKE', "%{$word}%")
+                    ->orWhereHas(
+                        'category',
+                        static fn(Builder $categoryQuery) =>
+                        $categoryQuery->where('name', 'LIKE', "%{$word}%"),
+                    ),
             ],
         ];
     }
@@ -42,12 +42,8 @@ class ProductController extends SearchableController
     {
         return [
             ...parent::prepareCriteria($criteria),
-            'minPrice' => (($criteria['minPrice'] ?? null) === null)
-                ? null
-                : (float) $criteria['minPrice'],
-            'maxPrice' => (($criteria['maxPrice'] ?? null) === null)
-                ? null
-                : (float) $criteria['maxPrice'],
+            'minPrice' => $this->toNullableFloat($criteria['minPrice'] ?? null),
+            'maxPrice' => $this->toNullableFloat($criteria['maxPrice'] ?? null),
         ];
     }
 
@@ -62,6 +58,7 @@ class ProductController extends SearchableController
         $query = $this->search($criteria)
             ->with(['category'])
             ->withCount('shops');
+
         return view('products.list', [
             'criteria' => $criteria,
             'products' => $query->paginate(static::MAX_ITEMS),
@@ -95,9 +92,11 @@ class ProductController extends SearchableController
         $product->category()->associate($category);
         $product->save();
 
-        return redirect()->route('products.view', [
-            'product' => $product->code,
-        ]);
+        return redirect()
+            ->route('products.view', [
+                'product' => $product->code,
+            ])
+            ->with('status', "Product {$product->code} was created.");
     }
 
     function showUpdateForm(string $productCode): View
@@ -123,9 +122,11 @@ class ProductController extends SearchableController
         $product->category()->associate($category);
         $product->save();
 
-        return redirect()->route('products.view', [
-            'product' => $product->code,
-        ]);
+        return redirect()
+            ->route('products.view', [
+                'product' => $product->code,
+            ])
+            ->with('status', "Product {$product->code} was updated.");
     }
 
     function delete(string $productCode): RedirectResponse
@@ -133,7 +134,9 @@ class ProductController extends SearchableController
         $product = $this->find($productCode);
         $product->delete();
 
-        return redirect()->route('products.index');
+        return redirect(
+            session()->get('bookmarks.products.delete') ?? route('products.list'),
+        )->with('status', "Product {$product->code} was deleted.");
     }
 
     function filterByMinPrice(Builder|Relation $query, float $minPrice): void
@@ -171,6 +174,7 @@ class ProductController extends SearchableController
         $shopController = resolve(ShopController::class);
         $criteria = $shopController->prepareCriteria($request->getQueryParams());
         $query = $product->shops()->withCount('products');
+
         $shopController->filter(
             $query,
             $criteria,
@@ -191,7 +195,7 @@ class ProductController extends SearchableController
         $shopQuery->whereDoesntHave(
             'products',
             static function (Builder $productQuery) use ($product): void {
-                $productQuery->where('code', $product->code);
+                $productQuery->whereKey($product->getKey());
             },
         );
     }
@@ -204,7 +208,9 @@ class ProductController extends SearchableController
         $shopController = resolve(ShopController::class);
         $criteria = $shopController->prepareCriteria($request->getQueryParams());
         $query = $shopController->getQuery()->withCount('products');
+
         $this->filterOutShopByProduct($query, $product);
+
         $shopController->filter(
             $query,
             $criteria,
@@ -225,9 +231,11 @@ class ProductController extends SearchableController
         $product = $this->find($productCode);
         $shopController = resolve(ShopController::class);
         $data = $request->getParsedBody();
+
         $shopQuery = $shopController->getQuery();
         $this->filterOutShopByProduct($shopQuery, $product);
         $shop = $shopQuery->where('code', $data['shop'])->firstOrFail();
+
         $product->shops()->attach($shop);
 
         return redirect()->back();
@@ -239,6 +247,7 @@ class ProductController extends SearchableController
     ): RedirectResponse {
         $product = $this->find($productCode);
         $data = $request->getParsedBody();
+
         $shop = $product->shops()->where('code', $data['shop'])->firstOrFail();
         $product->shops()->detach($shop);
 
