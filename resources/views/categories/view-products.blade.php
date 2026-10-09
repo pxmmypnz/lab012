@@ -16,10 +16,12 @@
                 session()->put('bookmarks.categories.add-products-form', url()->full());
             @endphp
 
-            <a class="app-cl-button app-cl-primary app-cl-filled"
-                href="{{ route('categories.add-products-form', ['category' => $category->code]) }}">
-                Add Products
-            </a>
+            @can('update', $category)
+                <a class="app-cl-button app-cl-primary app-cl-filled"
+                    href="{{ route('categories.add-products-form', ['category' => $category->code]) }}">
+                    Add Products
+                </a>
+            @endcan
         </nav>
     </div>
 @endsection

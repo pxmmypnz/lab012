@@ -45,9 +45,11 @@
     </form>
 
 
-    <a class="app-cl-button app-cl-primary app-cl-filled" href="{{ route('products.create-form') }}">
-        Create Product
-    </a>
+    @can('create', \App\Models\Product::class)
+        <a class="app-cl-button app-cl-primary app-cl-filled" href="{{ route('products.create-form') }}">
+            Create Product
+        </a>
+    @endcan
     {{ $products->links() }}
     <table class="app-cmp-data-list">
         <caption>List of Products</caption>
@@ -75,9 +77,13 @@
                     <td>{{ $product->name }}</td>
                     <td>
                         @if ($product->category)
-                            <a href="{{ route('categories.view', ['category' => $product->category->code]) }}">
+                            @can('view', $product->category)
+                                <a href="{{ route('categories.view', ['category' => $product->category->code]) }}">
+                                    {{ $product->category->name }}
+                                </a>
+                            @else
                                 {{ $product->category->name }}
-                            </a>
+                            @endcan
                         @endif
                     </td>
                     <td class="app-cl-number">{{ number_format($product->price, 2) }}</td>

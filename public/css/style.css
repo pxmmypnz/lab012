@@ -42,6 +42,57 @@ body>main {
     align-items: center;
 }
 
+#app-main-header nav.app-cmp-main-menu {
+    display: flex;
+    align-items: center;
+    gap: var(--app-gap);
+    width: 100%;
+    max-width: 640px;
+    min-height: 48px;
+    margin: 0 auto;
+    padding: 4px;
+}
+
+#app-main-header nav.app-cmp-main-menu>ul.app-cmp-links {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+}
+
+#app-main-header nav.app-cmp-main-menu>ul.app-cmp-user-panel {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--app-gap);
+    margin: 0 0 0 auto;
+    padding: 0;
+    list-style: none;
+}
+
+#app-main-header nav.app-cmp-main-menu ul.app-cmp-user-panel li {
+    border: 0;
+    border-radius: 0;
+    overflow: visible;
+    background: transparent;
+}
+
+#app-main-header nav.app-cmp-main-menu ul.app-cmp-user-panel li:hover {
+    background: transparent;
+}
+
+#app-main-header nav.app-cmp-main-menu ul.app-cmp-user-panel a.app-cl-user-link {
+    padding: 4px;
+    color: #0000ff;
+    font-weight: bold;
+}
+
+#app-main-header nav.app-cmp-main-menu ul.app-cmp-user-panel a.app-cl-user-link:hover {
+    text-decoration: underline;
+}
+
+#app-main-header nav.app-cmp-main-menu form#app-form-logout {
+    display: none;
+}
+
 #app-main-content {
     max-width: 640px;
     width: 100%;
@@ -100,6 +151,10 @@ ul.app-cmp-links a {
     padding: 6px 12px;
     text-decoration: none;
     color: #000;
+}
+
+#app-main-header nav.app-cmp-main-menu ul.app-cmp-user-panel button {
+    margin: 0;
 }
 
 nav.app-cmp-main-menu ul li:hover,
@@ -200,6 +255,24 @@ fieldset legend {
 .app-cmp-data-form> :is(label, .app-cl-control-container)> :first-child:has(+ :is(:required, .app-cl-required))::after {
     content: ' *';
     color: #000;
+}
+
+.app-cmp-self-edit-form label[for="user-name"] .app-cl-required {
+    color: #000;
+}
+
+.app-cmp-self-edit-form #user-email {
+    display: flex;
+    align-items: center;
+}
+
+.app-cmp-self-edit-form .app-cmp-notifications,
+.app-cmp-self-edit-form .app-cmp-form-actions {
+    grid-column: 1 / -1;
+}
+
+.app-cmp-self-edit-form .app-cmp-form-actions {
+    justify-content: space-between;
 }
 
 .app-cmp-data-form input[type="text"],
@@ -316,6 +389,20 @@ form.app-cmp-search-filter .app-cmp-form-actions {
 
 .app-cl-double-underline {
     text-decoration: underline double;
+}
+
+@media (max-width: 520px) {
+    #app-main-header nav.app-cmp-main-menu {
+        flex-wrap: wrap;
+    }
+
+    #app-main-header nav.app-cmp-main-menu>ul.app-cmp-links {
+        justify-content: flex-start;
+    }
+
+    #app-main-header nav.app-cmp-main-menu>ul.app-cmp-user-panel {
+        margin-left: auto;
+    }
 }
 
 /* Form Inputs Reset */

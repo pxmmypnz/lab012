@@ -60,9 +60,13 @@
             @foreach ($shops as $shop)
                 <tr>
                     <th class="app-cl-code">
-                        <a href="{{ route('shops.view', ['shop' => $shop->code]) }}">
+                        @can('view', $shop)
+                            <a href="{{ route('shops.view', ['shop' => $shop->code]) }}">
+                                {{ $shop->code }}
+                            </a>
+                        @else
                             {{ $shop->code }}
-                        </a>
+                        @endcan
                     </th>
                     <td>{{ $shop->name }}</td>
                     <td>{{ $shop->owner }}</td>

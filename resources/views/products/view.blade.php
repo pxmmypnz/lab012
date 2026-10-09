@@ -16,24 +16,31 @@
                 &lt; Back
             </a>
 
-            <a class="app-cl-button app-cl-primary" href="{{ route('products.view-shops', ['product' => $product->code]) }}">
-                View Shops
-            </a>
+            @can('view', $product)
+                <a class="app-cl-button app-cl-primary"
+                    href="{{ route('products.view-shops', ['product' => $product->code]) }}">
+                    View Shops
+                </a>
+            @endcan
 
-            <a class="app-cl-button app-cl-primary app-cl-filled"
-                href="{{ route('products.update-form', [
+            @can('update', $product)
+                <a class="app-cl-button app-cl-primary app-cl-filled"
+                    href="{{ route('products.update-form', [
+                        'product' => $product->code,
+                    ]) }}">
+                    Update
+                </a>
+            @endcan
+
+            @can('delete', $product)
+                <form action="{{ route('products.delete', [
                     'product' => $product->code,
-                ]) }}">
-                Update
-            </a>
-
-            <form action="{{ route('products.delete', [
-                'product' => $product->code,
-            ]) }}"
-                method="post">
-                @csrf
-                <button class="app-cl-button app-cl-warnning app-cl-filled" type="submit">Delete</button>
-            </form>
+                ]) }}"
+                    method="post">
+                    @csrf
+                    <button class="app-cl-button app-cl-warnning app-cl-filled" type="submit">Delete</button>
+                </form>
+            @endcan
         </nav>
     </div>
 @endsection

@@ -24,20 +24,24 @@
                 View Products
             </a>
 
-            <a class="app-cl-button app-cl-primary app-cl-filled"
-                href="{{ route('categories.update-form', [
-                    'category' => $category->code,
-                ]) }}">
-                Update
-            </a>
+            @can('update', $category)
+                <a class="app-cl-button app-cl-primary app-cl-filled"
+                    href="{{ route('categories.update-form', [
+                        'category' => $category->code,
+                    ]) }}">
+                    Update
+                </a>
+            @endcan
 
-            <form action="{{ route('categories.delete', [
-                'category' => $category->code,
-            ]) }}"
-                method="post" style="margin: 0;">
-                @csrf
-                <button class="app-cl-button app-cl-warnning app-cl-filled" type="submit">Delete</button>
-            </form>
+            @can('delete', $category)
+                <form action="{{ route('categories.delete', [
+                    'category' => $category->code,
+                ]) }}"
+                    method="post" style="margin: 0;">
+                    @csrf
+                    <button class="app-cl-button app-cl-warnning app-cl-filled" type="submit">Delete</button>
+                </form>
+            @endcan
         </nav>
     </div>
 @endsection

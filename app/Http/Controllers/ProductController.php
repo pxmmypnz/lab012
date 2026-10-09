@@ -7,6 +7,7 @@ use App\Models\Product;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -54,6 +55,7 @@ class ProductController extends SearchableController
 
     function list(ServerRequestInterface $request): View
     {
+        Gate::authorize('list', Product::class);
         $criteria = $this->prepareCriteria($request->getQueryParams());
         $query = $this->search($criteria)
             ->with(['category'])
@@ -67,7 +69,9 @@ class ProductController extends SearchableController
 
     function view(string $product): View
     {
-        $productModel = $this->find($product)->load('category');
+        $productModel = $this->find($product);
+        Gate::authorize('view', $productModel);
+        $productModel->load('category');
 
         return view('products.view', [
             'product' => $productModel,
@@ -76,6 +80,7 @@ class ProductController extends SearchableController
 
     function showCreateForm(): View
     {
+        Gate::authorize('create', Product::class);
         return view('products.create-form', [
             'categories' => Category::orderBy('code')->get(),
         ]);
@@ -83,6 +88,7 @@ class ProductController extends SearchableController
 
     function create(ServerRequestInterface $request): RedirectResponse
     {
+        Gate::authorize('create', Product::class);
         $data = $request->getParsedBody();
         $category = Category::where('code', $data['category'])->firstOrFail();
         unset($data['category']);
@@ -110,6 +116,7 @@ class ProductController extends SearchableController
     function showUpdateForm(string $productCode): View
     {
         $product = $this->find($productCode);
+        Gate::authorize('update', $product);
 
         return view('products.update-form', [
             'product' => $product,
@@ -122,6 +129,7 @@ class ProductController extends SearchableController
         ServerRequestInterface $request,
     ): RedirectResponse {
         $product = $this->find($productCode);
+        Gate::authorize('update', $product);
         $data = $request->getParsedBody();
         $category = Category::where('code', $data['category'])->firstOrFail();
         unset($data['category']);
@@ -148,6 +156,7 @@ class ProductController extends SearchableController
     function delete(string $productCode): RedirectResponse
     {
         $product = $this->find($productCode);
+        Gate::authorize('delete', $product);
         $product->delete();
 
         return redirect(
@@ -187,6 +196,7 @@ class ProductController extends SearchableController
         ServerRequestInterface $request,
     ): View {
         $product = $this->find($productCode);
+        Gate::authorize('view', $product);
         $shopController = resolve(ShopController::class);
         $criteria = $shopController->prepareCriteria($request->getQueryParams());
         $query = $product->shops()->withCount('products');
@@ -221,6 +231,7 @@ class ProductController extends SearchableController
         ServerRequestInterface $request,
     ): View {
         $product = $this->find($productCode);
+        Gate::authorize('update', $product);
         $shopController = resolve(ShopController::class);
         $criteria = $shopController->prepareCriteria($request->getQueryParams());
         $query = $shopController->getQuery()->withCount('products');
@@ -245,6 +256,7 @@ class ProductController extends SearchableController
         ServerRequestInterface $request,
     ): RedirectResponse {
         $product = $this->find($productCode);
+        Gate::authorize('update', $product);
         $shopController = resolve(ShopController::class);
         $data = $request->getParsedBody();
 
@@ -263,6 +275,7 @@ class ProductController extends SearchableController
         ServerRequestInterface $request,
     ): RedirectResponse {
         $product = $this->find($productCode);
+        Gate::authorize('update', $product);
         $data = $request->getParsedBody();
 
         $shop = $product->shops()->where('code', $data['shop'])->firstOrFail();

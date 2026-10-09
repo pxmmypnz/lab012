@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\User;
 use Database\Seeders\ProductSeeder;
 use Database\Seeders\ProductShopSeeder;
 use Database\Seeders\ShopSeeder;
@@ -16,6 +17,7 @@ class CategoryTest extends TestCase
     {
         parent::setUp();
 
+        $this->actingAs(User::where('email', 'admin@my-db.com')->firstOrFail());
         $this->seed(ProductSeeder::class);
         $this->seed(ShopSeeder::class);
         $this->seed(ProductShopSeeder::class);
@@ -126,7 +128,7 @@ class CategoryTest extends TestCase
             ->assertSee('Category: PHP')
             ->assertSee('View Products')
             ->assertSee('Update')
-            ->assertSee('Delete')
+            ->assertDontSee('Delete')
             ->assertDontSee('Products in PHP');
     }
 

@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -33,6 +34,7 @@ class CategoryController extends SearchableController
 
     function list(ServerRequestInterface $request): View
     {
+        Gate::authorize('list', Category::class);
         $criteria = $this->prepareCriteria($request->getQueryParams());
         $query = $this->search($criteria)->withCount('products');
 
@@ -44,11 +46,13 @@ class CategoryController extends SearchableController
 
     function showCreateForm(): View
     {
+        Gate::authorize('create', Category::class);
         return view('categories.create-form');
     }
 
     function create(ServerRequestInterface $request): RedirectResponse
     {
+        Gate::authorize('create', Category::class);
         $category = Category::create($request->getParsedBody());
 
         if (session()->has('bookmarks.categories.create')) {
@@ -67,6 +71,7 @@ class CategoryController extends SearchableController
     function view(string $category): View
     {
         $categoryModel = $this->find($category);
+        Gate::authorize('view', $categoryModel);
 
         return view('categories.view', [
             'category' => $categoryModel,
@@ -75,8 +80,11 @@ class CategoryController extends SearchableController
 
     function showUpdateForm(string $category): View
     {
+        $categoryModel = $this->find($category);
+        Gate::authorize('update', $categoryModel);
+
         return view('categories.update-form', [
-            'category' => $this->find($category),
+            'category' => $categoryModel,
         ]);
     }
 
@@ -85,6 +93,7 @@ class CategoryController extends SearchableController
         ServerRequestInterface $request,
     ): RedirectResponse {
         $category = $this->find($categoryCode);
+        Gate::authorize('update', $category);
         $category->fill($request->getParsedBody());
         $category->save();
 
@@ -104,6 +113,7 @@ class CategoryController extends SearchableController
     function delete(string $category): RedirectResponse
     {
         $categoryModel = $this->find($category);
+        Gate::authorize('delete', $categoryModel);
         $categoryModel->delete();
 
         return redirect(
@@ -119,6 +129,7 @@ class CategoryController extends SearchableController
         ServerRequestInterface $request,
     ): View {
         $category = $this->find($categoryCode);
+        Gate::authorize('view', $category);
         $productController = resolve(ProductController::class);
         $criteria = $productController->prepareCriteria($request->getQueryParams());
 
@@ -148,6 +159,7 @@ class CategoryController extends SearchableController
         ServerRequestInterface $request,
     ): View {
         $category = $this->find($categoryCode);
+        Gate::authorize('update', $category);
         $productController = resolve(ProductController::class);
         $criteria = $productController->prepareCriteria($request->getQueryParams());
 
@@ -181,6 +193,7 @@ class CategoryController extends SearchableController
         ServerRequestInterface $request,
     ): RedirectResponse {
         $category = $this->find($categoryCode);
+        Gate::authorize('update', $category);
         $data = $request->getParsedBody();
 
         $product = Product::where('code', $data['product'])->firstOrFail();

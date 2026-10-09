@@ -36,9 +36,11 @@
 
     <div class="app-cmp-form-actions">
         <nav aria-label="Category actions">
-            <a class="app-cl-button app-cl-primary app-cl-filled" href="{{ route('categories.create-form') }}">
-                Create Category
-            </a>
+            @can('create', \App\Models\Category::class)
+                <a class="app-cl-button app-cl-primary app-cl-filled" href="{{ route('categories.create-form') }}">
+                    Create Category
+                </a>
+            @endcan
         </nav>
 
         <div class="app-cmp-form-secondary-actions">

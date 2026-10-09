@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Product;
 use App\Models\Shop;
+use App\Models\User;
 use Database\Seeders\ProductSeeder;
 use Database\Seeders\ProductShopSeeder;
 use Database\Seeders\ShopSeeder;
@@ -18,6 +19,7 @@ class ProductTest extends TestCase
     {
         parent::setUp();
 
+        $this->actingAs(User::where('email', 'admin@my-db.com')->firstOrFail());
         $this->seed(ProductSeeder::class);
         $this->seed(ShopSeeder::class);
         $this->seed(ProductShopSeeder::class);

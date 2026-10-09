@@ -22,16 +22,19 @@
                 View Products
             </a>
 
-            <a class="app-cl-button" href="{{ route('shops.update-form', ['shop' => $shop->code]) }}">
-                Update
-            </a>
-
-            <form action="{{ route('shops.delete', ['shop' => $shop->code]) }}" method="post" style="display: inline;">
-                @csrf
-                <button class="app-cl-button app-cl-warnning app-cl-filled" type="submit">
-                    Delete
-                </button>
-            </form>
+            @can('update', $shop)
+                <a class="app-cl-button" href="{{ route('shops.update-form', ['shop' => $shop->code]) }}">
+                    Update
+                </a>
+            @endcan
+            @can('delete', $shop)
+                <form action="{{ route('shops.delete', ['shop' => $shop->code]) }}" method="post" style="display: inline;">
+                    @csrf
+                    <button class="app-cl-button app-cl-warnning app-cl-filled" type="submit">
+                        Delete
+                    </button>
+                </form>
+            @endcan
         </nav>
     </div>
 @endsection

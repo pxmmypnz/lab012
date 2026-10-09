@@ -37,9 +37,11 @@
     </form>
 
 
-    <a class="app-cl-button app-cl-primary app-cl-filled" href="{{ route('shops.create-form') }}">
-        Create Shop
-    </a>
+    @can('create', \App\Models\Shop::class)
+        <a class="app-cl-button app-cl-primary app-cl-filled" href="{{ route('shops.create-form') }}">
+            Create Shop
+        </a>
+    @endcan
     {{ $shops->links() }}
     <table class="app-cmp-data-list">
         <caption>List of Shops</caption>

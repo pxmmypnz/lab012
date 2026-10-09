@@ -14,15 +14,17 @@
                 session()->put('bookmarks.shops.add-products-form', url()->full());
             @endphp
 
-            <a class="app-cl-button app-cl-primary app-cl-filled"
-                href="{{ route('shops.add-products-form', ['shop' => $shop->code]) }}">
-                Add Products
-            </a>
+            @can('update', $shop)
+                <a class="app-cl-button app-cl-primary app-cl-filled"
+                    href="{{ route('shops.add-products-form', ['shop' => $shop->code]) }}">
+                    Add Products
+                </a>
 
-            <form action="{{ route('shops.remove-product', ['shop' => $shop->code]) }}" id="app-form-remove-product"
-                method="post">
-                @csrf
-            </form>
+                <form action="{{ route('shops.remove-product', ['shop' => $shop->code]) }}"
+                    id="app-form-remove-product" method="post">
+                    @csrf
+                </form>
+            @endcan
         </nav>
     </div>
 @endsection
@@ -67,7 +69,9 @@
                 <th>Category</th>
                 <th>Price</th>
                 <th>No. of Shops</th>
-                <th></th>
+                @can('update', $shop)
+                    <th></th>
+                @endcan
             </tr>
         </thead>
         <tbody>
@@ -93,12 +97,14 @@
                     </td>
                     <td class="app-cl-number">{{ number_format($product->price, 2) }}</td>
                     <td class="app-cl-number">{{ $product->shops_count }}</td>
-                    <td class="app-cl-action">
-                        <button class="app-cl-button app-cl-warnning app-cl-filled" type="submit"
-                            form="app-form-remove-product" name="product" value="{{ $product->code }}">
-                            Remove
-                        </button>
-                    </td>
+                    @can('update', $shop)
+                        <td class="app-cl-action">
+                            <button class="app-cl-button app-cl-warnning app-cl-filled" type="submit"
+                                form="app-form-remove-product" name="product" value="{{ $product->code }}">
+                                Remove
+                            </button>
+                        </td>
+                    @endcan
                 </tr>
             @endforeach
         </tbody>

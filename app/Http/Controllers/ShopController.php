@@ -7,6 +7,7 @@ use App\Models\Shop;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -38,6 +39,7 @@ class ShopController extends SearchableController
 
     function list(ServerRequestInterface $request): View
     {
+        Gate::authorize('list', Shop::class);
         $criteria = $this->prepareCriteria($request->getQueryParams());
         $query = $this->search($criteria)->withCount('products');
 
@@ -50,6 +52,7 @@ class ShopController extends SearchableController
     function view(string $shop): View
     {
         $shopModel = Shop::where('code', $shop)->firstOrFail();
+        Gate::authorize('view', $shopModel);
 
         return view('shops.view', [
             'shop' => $shopModel,
@@ -58,11 +61,13 @@ class ShopController extends SearchableController
 
     function showCreateForm(): View
     {
+        Gate::authorize('create', Shop::class);
         return view('shops.create-form');
     }
 
     function create(ServerRequestInterface $request): RedirectResponse
     {
+        Gate::authorize('create', Shop::class);
         $shop = Shop::create($request->getParsedBody());
 
         if (session()->has('bookmarks.shops.create')) {
@@ -81,6 +86,7 @@ class ShopController extends SearchableController
     function showUpdateForm(string $shop): View
     {
         $shopModel = $this->find($shop);
+        Gate::authorize('update', $shopModel);
 
         return view('shops.update-form', [
             'shop' => $shopModel,
@@ -92,6 +98,7 @@ class ShopController extends SearchableController
         ServerRequestInterface $request,
     ): RedirectResponse {
         $shopModel = $this->find($shop);
+        Gate::authorize('update', $shopModel);
 
         $shopModel->fill($request->getParsedBody());
         $shopModel->save();
@@ -112,6 +119,7 @@ class ShopController extends SearchableController
     function delete(string $shop): RedirectResponse
     {
         $shopModel = $this->find($shop);
+        Gate::authorize('delete', $shopModel);
         $shopModel->delete();
 
         return redirect(
@@ -128,6 +136,7 @@ class ShopController extends SearchableController
         ServerRequestInterface $request,
     ): View {
         $shop = $this->find($shopCode);
+        Gate::authorize('view', $shop);
         $productController = resolve(ProductController::class);
         $criteria = $productController->prepareCriteria($request->getQueryParams());
 
@@ -173,6 +182,7 @@ class ShopController extends SearchableController
         ServerRequestInterface $request,
     ): View {
         $shop = $this->find($shopCode);
+        Gate::authorize('update', $shop);
         $productController = resolve(ProductController::class);
         $criteria = $productController->prepareCriteria($request->getQueryParams());
 
@@ -204,6 +214,7 @@ class ShopController extends SearchableController
         ServerRequestInterface $request,
     ): RedirectResponse {
         $shop = $this->find($shopCode);
+        Gate::authorize('update', $shop);
         $productController = resolve(ProductController::class);
         $data = $request->getParsedBody();
 
@@ -225,6 +236,7 @@ class ShopController extends SearchableController
         ServerRequestInterface $request,
     ): RedirectResponse {
         $shop = $this->find($shopCode);
+        Gate::authorize('update', $shop);
         $data = $request->getParsedBody();
 
         $product = $shop->products()->where('code', $data['product'])->firstOrFail();

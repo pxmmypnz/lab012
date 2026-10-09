@@ -10,10 +10,12 @@
             @endphp
 
 
-            <form action="{{ route('products.remove-shop', ['product' => $product->code]) }}" id="app-form-remove-shop"
-                method="post">
-                @csrf
-            </form>
+            @can('update', $product)
+                <form action="{{ route('products.remove-shop', ['product' => $product->code]) }}"
+                    id="app-form-remove-shop" method="post">
+                    @csrf
+                </form>
+            @endcan
         </nav>
     </div>
 @endsection
@@ -43,10 +45,12 @@
         &lt; Back
     </a>
 
-    <a class="app-cl-button app-cl-primary app-cl-filled"
-        href="{{ route('products.add-shops-form', ['product' => $product->code]) }}">
-        Add Shops
-    </a>
+    @can('update', $product)
+        <a class="app-cl-button app-cl-primary app-cl-filled"
+            href="{{ route('products.add-shops-form', ['product' => $product->code]) }}">
+            Add Shops
+        </a>
+    @endcan
 
     {{ $shops->links() }}
 
@@ -58,7 +62,9 @@
                 <th>Name</th>
                 <th>Owner</th>
                 <th>No. of Products</th>
-                <th></th>
+                @can('update', $product)
+                    <th></th>
+                @endcan
             </tr>
         </thead>
         <tbody>
@@ -69,19 +75,25 @@
             @foreach ($shops as $shop)
                 <tr>
                     <th class="app-cl-code">
-                        <a href="{{ route('shops.view', ['shop' => $shop->code]) }}">
+                        @can('view', $shop)
+                            <a href="{{ route('shops.view', ['shop' => $shop->code]) }}">
+                                {{ $shop->code }}
+                            </a>
+                        @else
                             {{ $shop->code }}
-                        </a>
+                        @endcan
                     </th>
                     <td>{{ $shop->name }}</td>
                     <td>{{ $shop->owner }}</td>
                     <td class="app-cl-number">{{ $shop->products_count }}</td>
-                    <td class="app-cl-action">
-                        <button class="app-cl-button app-cl-warnning app-cl-filled" type="submit"
-                            form="app-form-remove-shop" name="shop" value="{{ $shop->code }}">
-                            Remove
-                        </button>
-                    </td>
+                    @can('update', $product)
+                        <td class="app-cl-action">
+                            <button class="app-cl-button app-cl-warnning app-cl-filled" type="submit"
+                                form="app-form-remove-shop" name="shop" value="{{ $shop->code }}">
+                                Remove
+                            </button>
+                        </td>
+                    @endcan
                 </tr>
             @endforeach
         </tbody>
