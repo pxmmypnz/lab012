@@ -18,11 +18,37 @@ class UserTest extends TestCase
         $this->actingAs($user)
             ->get('/users')
             ->assertForbidden();
+        $this->get(route('users.list'))->assertForbidden();
+        $this->get(route('users.create-form'))->assertForbidden();
+        $this->post(route('users.create'), [
+            'name' => 'Unauthorized User',
+            'email' => 'unauthorized@example.com',
+            'password' => '1234',
+            'role' => 'USER',
+        ])->assertForbidden();
+        $this->get(route('users.view', ['user' => 'admin@my-db.com']))
+            ->assertForbidden();
+        $this->get(route('users.update-form', ['user' => 'admin@my-db.com']))
+            ->assertForbidden();
+        $this->post(route('users.update', ['user' => 'admin@my-db.com']), [
+            'name' => 'Unauthorized Update',
+            'password' => '',
+            'role' => 'USER',
+        ])->assertForbidden();
+        $this->post(route('users.delete', ['user' => 'admin@my-db.com']))
+            ->assertForbidden();
 
         $this->get(route('users.selves.view'))
             ->assertOk()
             ->assertSee('user@my-db.com')
-            ->assertSee('USER');
+            ->assertSee('USER')
+            ->assertSee('href="' . route('users.selves.view') . '"', false);
+
+        $this->get(route('users.selves.update-form'))
+            ->assertOk()
+            ->assertSee('User: Self')
+            ->assertSee('Name <span class="app-cl-required">*</span>', false)
+            ->assertSee('placeholder="Leave blank if you don\'t want to update"', false);
 
         $this->from(route('users.selves.update-form'))
             ->post(route('users.selves.update'), [
@@ -56,6 +82,31 @@ class UserTest extends TestCase
             ->assertSee('user@my-db.com')
             ->assertDontSee('admin@my-db.com');
 
+        $this->get(route('users.list', ['term' => $admin->email]))
+            ->assertOk()
+            ->assertSee($admin->email);
+        $this->get(route('users.list', ['term' => $admin->name]))
+            ->assertOk()
+            ->assertSee($admin->email);
+
+        $this->get('/users?term=USER')->assertOk();
+
+        $this->get(route('users.update-form', ['user' => $admin->email]))
+            ->assertOk()
+            ->assertSee('User: admin@my-db.com')
+            ->assertSee('id="user-email" type="email" value="admin@my-db.com" readonly', false)
+            ->assertDontSee('name="email"', false)
+            ->assertSee('Name <span class="app-cl-required">*</span>', false)
+            ->assertSee('id="user-role" type="text" value="ADMIN" readonly', false)
+            ->assertSee('placeholder="Leave blank if you don\'t want to update"', false)
+            ->assertDontSee('name="role"', false);
+
+        $this->get(route('users.view', ['user' => $admin->email]))
+            ->assertOk()
+            ->assertSee('User: admin@my-db.com')
+            ->assertSee('href="' . route('users.update-form', ['user' => $admin->email]) . '">Update</a>', false)
+            ->assertDontSee('users/' . $admin->email . '/delete', false);
+
         $this->from(route('users.list', ['term' => 'user']))
             ->post(route('users.create'), [
                 'name' => 'New User',
@@ -69,6 +120,10 @@ class UserTest extends TestCase
 
         $created = User::where('email', 'new@example.com')->firstOrFail();
         $this->assertTrue(Hash::check('1234', $created->password));
+
+        $this->get(route('users.update-form', ['user' => $created->email]))
+            ->assertOk()
+            ->assertSee('<select id="user-role" name="role" required>', false);
 
         $this->post(route('users.update', ['user' => $created->email]), [
             'name' => 'Renamed User',
@@ -94,12 +149,13 @@ class UserTest extends TestCase
         $this->assertSame('Changed Admin', $admin->name);
         $this->assertSame('admin@my-db.com', $admin->email);
         $this->assertSame('ADMIN', $admin->role);
+        $this->assertTrue(Hash::check('1234', $admin->password));
 
         $this->post(route('users.delete', ['user' => $admin->email]))
             ->assertForbidden();
 
         $this->post(route('users.delete', ['user' => $created->email]))
-            ->assertRedirect(route('users.index'));
+            ->assertRedirect(route('users.list', ['term' => 'USER']));
         $this->assertDatabaseMissing('users', ['email' => 'new@example.com']);
     }
 }

@@ -12,7 +12,8 @@
         <input id="user-name" type="text" name="name" value="{{ old('name', $user->name) }}" required>
 
         <label for="user-password">Password</label>
-        <input id="user-password" type="password" name="password" placeholder="Leave blank to keep current password">
+        <input id="user-password" type="password" name="password"
+            placeholder="Leave blank if you don't want to update">
 
         @include('users.validation-errors')
 
