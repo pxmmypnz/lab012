@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Product;
+use Illuminate\Database\QueryException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
@@ -53,19 +54,25 @@ class CategoryController extends SearchableController
     function create(ServerRequestInterface $request): RedirectResponse
     {
         Gate::authorize('create', Category::class);
-        $category = Category::create($request->getParsedBody());
+        try {
+            $category = Category::create($request->getParsedBody());
 
-        if (session()->has('bookmarks.categories.create')) {
-            session()->put(
-                'bookmarks.categories.view',
-                session()->get('bookmarks.categories.create'),
-            );
+            if (session()->has('bookmarks.categories.create')) {
+                session()->put(
+                    'bookmarks.categories.view',
+                    session()->get('bookmarks.categories.create'),
+                );
+            }
+            session()->forget('bookmarks.categories.create');
+
+            return redirect()->route('categories.view', [
+                'category' => $category->code,
+            ])->with('status', "Category {$category->code} was created.");
+        } catch (QueryException $excp) {
+            return redirect()->back()->withInput()->withErrors([
+                'alert' => $excp->errorInfo[2],
+            ]);
         }
-        session()->forget('bookmarks.categories.create');
-
-        return redirect()->route('categories.view', [
-            'category' => $category->code,
-        ])->with('status', "Category {$category->code} was created.");
     }
 
     function view(string $category): View
@@ -94,31 +101,45 @@ class CategoryController extends SearchableController
     ): RedirectResponse {
         $category = $this->find($categoryCode);
         Gate::authorize('update', $category);
-        $category->fill($request->getParsedBody());
-        $category->save();
 
-        if (session()->has('bookmarks.categories.update')) {
-            session()->put(
-                'bookmarks.categories.view',
-                session()->get('bookmarks.categories.update'),
-            );
+        try {
+            $category->fill($request->getParsedBody());
+            $category->save();
+
+            if (session()->has('bookmarks.categories.update')) {
+                session()->put(
+                    'bookmarks.categories.view',
+                    session()->get('bookmarks.categories.update'),
+                );
+            }
+            session()->forget('bookmarks.categories.update');
+
+            return redirect()->route('categories.view', [
+                'category' => $category->code,
+            ])->with('status', "Category {$category->code} was updated.");
+        } catch (QueryException $excp) {
+            return redirect()->back()->withInput()->withErrors([
+                'alert' => $excp->errorInfo[2],
+            ]);
         }
-        session()->forget('bookmarks.categories.update');
-
-        return redirect()->route('categories.view', [
-            'category' => $category->code,
-        ])->with('status', "Category {$category->code} was updated.");
     }
 
     function delete(string $category): RedirectResponse
     {
         $categoryModel = $this->find($category);
         Gate::authorize('delete', $categoryModel);
-        $categoryModel->delete();
 
-        return redirect(
-            session()->get('bookmarks.categories.delete') ?? route('categories.view', ['category' => $category]),
-        )->with('status', "Category {$categoryModel->code} was deleted.");
+        try {
+            $categoryModel->delete();
+
+            return redirect(
+                session()->get('bookmarks.categories.delete') ?? route('categories.view', ['category' => $category]),
+            )->with('status', "Category {$categoryModel->code} was deleted.");
+        } catch (QueryException $excp) {
+            return redirect()->back()->withErrors([
+                'alert' => $excp->errorInfo[2],
+            ]);
+        }
     }
 
     /**
@@ -194,13 +215,19 @@ class CategoryController extends SearchableController
     ): RedirectResponse {
         $category = $this->find($categoryCode);
         Gate::authorize('update', $category);
-        $data = $request->getParsedBody();
+        try {
+            $data = $request->getParsedBody();
 
-        $product = Product::where('code', $data['product'])->firstOrFail();
-        $product->category()->associate($category);
-        $product->save();
+            $product = Product::where('code', $data['product'])->firstOrFail();
+            $product->category()->associate($category);
+            $product->save();
 
-        return redirect()->back()
-            ->with('status', "Product {$product->code} was added to Category {$category->code}.");
+            return redirect()->back()
+                ->with('status', "Product {$product->code} was added to Category {$category->code}.");
+        } catch (QueryException $excp) {
+            return redirect()->back()->withErrors([
+                'alert' => $excp->errorInfo[2],
+            ]);
+        }
     }
 }

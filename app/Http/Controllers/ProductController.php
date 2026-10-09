@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Product;
+use Illuminate\Database\QueryException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\RedirectResponse;
@@ -89,28 +90,38 @@ class ProductController extends SearchableController
     function create(ServerRequestInterface $request): RedirectResponse
     {
         Gate::authorize('create', Product::class);
-        $data = $request->getParsedBody();
-        $category = Category::where('code', $data['category'])->firstOrFail();
-        unset($data['category']);
+        try {
+            $data = $request->getParsedBody();
+            $category = Category::where('code', $data['category'])->firstOrFail();
+            unset($data['category']);
 
-        $product = new Product();
-        $product->fill($data);
-        $product->category()->associate($category);
-        $product->save();
+            $product = new Product();
+            $product->fill($data);
+            $product->category()->associate($category);
+            $product->save();
 
-        if (session()->has('bookmarks.products.create')) {
-            session()->put(
-                'bookmarks.products.view',
-                session()->get('bookmarks.products.create'),
-            );
+            if (session()->has('bookmarks.products.create')) {
+                session()->put(
+                    'bookmarks.products.view',
+                    session()->get('bookmarks.products.create'),
+                );
+            }
+            session()->forget('bookmarks.products.create');
+
+            return redirect()
+                ->route('products.view', [
+                    'product' => $product->code,
+                ])
+                ->with('status', "Product {$product->code} was created.");
+        } catch (QueryException $excp) {
+            return redirect()->back()->withInput()->withErrors([
+                'alert' => $excp->errorInfo[2],
+            ]);
+        } catch (\Exception $excp) {
+            return redirect()->back()->withInput()->withErrors([
+                'alert' => $excp->getMessage(),
+            ]);
         }
-        session()->forget('bookmarks.products.create');
-
-        return redirect()
-            ->route('products.view', [
-                'product' => $product->code,
-            ])
-            ->with('status', "Product {$product->code} was created.");
     }
 
     function showUpdateForm(string $productCode): View
@@ -130,38 +141,58 @@ class ProductController extends SearchableController
     ): RedirectResponse {
         $product = $this->find($productCode);
         Gate::authorize('update', $product);
-        $data = $request->getParsedBody();
-        $category = Category::where('code', $data['category'])->firstOrFail();
-        unset($data['category']);
+        try {
+            $data = $request->getParsedBody();
+            $category = Category::where('code', $data['category'])->firstOrFail();
+            unset($data['category']);
 
-        $product->fill($data);
-        $product->category()->associate($category);
-        $product->save();
+            $product->fill($data);
+            $product->category()->associate($category);
+            $product->save();
 
-        if (session()->has('bookmarks.products.update')) {
-            session()->put(
-                'bookmarks.products.view',
-                session()->get('bookmarks.products.update'),
-            );
+            if (session()->has('bookmarks.products.update')) {
+                session()->put(
+                    'bookmarks.products.view',
+                    session()->get('bookmarks.products.update'),
+                );
+            }
+            session()->forget('bookmarks.products.update');
+
+            return redirect()
+                ->route('products.view', [
+                    'product' => $product->code,
+                ])
+                ->with('status', "Product {$product->code} was updated.");
+        } catch (QueryException $excp) {
+            return redirect()->back()->withInput()->withErrors([
+                'alert' => $excp->errorInfo[2],
+            ]);
+        } catch (\Exception $excp) {
+            return redirect()->back()->withInput()->withErrors([
+                'alert' => $excp->getMessage(),
+            ]);
         }
-        session()->forget('bookmarks.products.update');
-
-        return redirect()
-            ->route('products.view', [
-                'product' => $product->code,
-            ])
-            ->with('status', "Product {$product->code} was updated.");
     }
 
     function delete(string $productCode): RedirectResponse
     {
         $product = $this->find($productCode);
         Gate::authorize('delete', $product);
-        $product->delete();
+        try {
+            $product->delete();
 
-        return redirect(
-            session()->get('bookmarks.products.delete') ?? route('products.list'),
-        )->with('status', "Product {$product->code} was deleted.");
+            return redirect(
+                session()->get('bookmarks.products.delete') ?? route('products.list'),
+            )->with('status', "Product {$product->code} was deleted.");
+        } catch (QueryException $excp) {
+            return redirect()->back()->withErrors([
+                'alert' => $excp->errorInfo[2],
+            ]);
+        } catch (\Exception $excp) {
+            return redirect()->back()->withErrors([
+                'alert' => $excp->getMessage(),
+            ]);
+        }
     }
 
     function filterByMinPrice(Builder|Relation $query, float $minPrice): void
@@ -257,17 +288,27 @@ class ProductController extends SearchableController
     ): RedirectResponse {
         $product = $this->find($productCode);
         Gate::authorize('update', $product);
-        $shopController = resolve(ShopController::class);
-        $data = $request->getParsedBody();
+        try {
+            $shopController = resolve(ShopController::class);
+            $data = $request->getParsedBody();
 
-        $shopQuery = $shopController->getQuery();
-        $this->filterOutShopByProduct($shopQuery, $product);
-        $shop = $shopQuery->where('code', $data['shop'])->firstOrFail();
+            $shopQuery = $shopController->getQuery();
+            $this->filterOutShopByProduct($shopQuery, $product);
+            $shop = $shopQuery->where('code', $data['shop'])->firstOrFail();
 
-        $product->shops()->attach($shop);
+            $product->shops()->attach($shop);
 
-        return redirect()->back()
-            ->with('status', "Shop {$shop->code} was added to Product {$product->code}.");
+            return redirect()->back()
+                ->with('status', "Shop {$shop->code} was added to Product {$product->code}.");
+        } catch (QueryException $excp) {
+            return redirect()->back()->withErrors([
+                'alert' => $excp->errorInfo[2],
+            ]);
+        } catch (\Exception $excp) {
+            return redirect()->back()->withErrors([
+                'alert' => $excp->getMessage(),
+            ]);
+        }
     }
 
     function removeShop(
@@ -276,12 +317,22 @@ class ProductController extends SearchableController
     ): RedirectResponse {
         $product = $this->find($productCode);
         Gate::authorize('update', $product);
-        $data = $request->getParsedBody();
+        try {
+            $data = $request->getParsedBody();
 
-        $shop = $product->shops()->where('code', $data['shop'])->firstOrFail();
-        $product->shops()->detach($shop);
+            $shop = $product->shops()->where('code', $data['shop'])->firstOrFail();
+            $product->shops()->detach($shop);
 
-        return redirect()->back()
-            ->with('status', "Shop {$shop->code} was removed from Product {$product->code}.");
+            return redirect()->back()
+                ->with('status', "Shop {$shop->code} was removed from Product {$product->code}.");
+        } catch (QueryException $excp) {
+            return redirect()->back()->withErrors([
+                'alert' => $excp->errorInfo[2],
+            ]);
+        } catch (\Exception $excp) {
+            return redirect()->back()->withErrors([
+                'alert' => $excp->getMessage(),
+            ]);
+        }
     }
 }

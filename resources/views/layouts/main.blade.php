@@ -65,12 +65,16 @@
             @session('status')
                 <div role="status">{{ $value }}</div>
             @endsession
+            @error('alert')
+                <div role="alert">{{ $message }}</div>
+            @enderror
         </div>
         <header>
             @yield('header')
         </header>
         @yield('content')
     </main>
+    @dump(session()->get('bookmarks'))
 
     <footer id="app-main-footer">
         &#xA9; Copyright Pamila's Database.

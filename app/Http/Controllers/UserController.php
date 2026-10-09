@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use Illuminate\Database\QueryException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -59,23 +60,29 @@ class UserController extends SearchableController
             'role' => ['required', 'in:ADMIN,USER'],
         ])->validate();
 
-        $user = new User();
-        $user->name = $data['name'];
-        $user->email = $data['email'];
-        $user->password = $data['password'];
-        $user->role = $data['role'];
-        $user->save();
+        try {
+            $user = new User();
+            $user->name = $data['name'];
+            $user->email = $data['email'];
+            $user->password = $data['password'];
+            $user->role = $data['role'];
+            $user->save();
 
-        if (session()->has('bookmarks.users.create')) {
-            session()->put(
-                'bookmarks.users.view',
-                session()->get('bookmarks.users.create'),
-            );
+            if (session()->has('bookmarks.users.create')) {
+                session()->put(
+                    'bookmarks.users.view',
+                    session()->get('bookmarks.users.create'),
+                );
+            }
+            session()->forget('bookmarks.users.create');
+
+            return redirect()->route('users.view', ['user' => $user->email])
+                ->with('status', "User {$user->email} was created.");
+        } catch (QueryException $excp) {
+            return redirect()->back()->withInput()->withErrors([
+                'alert' => $excp->errorInfo[2],
+            ]);
         }
-        session()->forget('bookmarks.users.create');
-
-        return redirect()->route('users.view', ['user' => $user->email])
-            ->with('status', "User {$user->email} was created.");
     }
 
     function view(string $user): View
@@ -115,35 +122,48 @@ class UserController extends SearchableController
             ...$rules,
         ])->validate();
 
-        $userModel->name = $data['name'];
-        if (!$isSelf) {
-            $userModel->role = $data['role'];
-        }
-        if ($data['password'] !== null && $data['password'] !== '') {
-            $userModel->password = $data['password'];
-        }
-        $userModel->save();
+        try {
+            $userModel->name = $data['name'];
+            if (!$isSelf) {
+                $userModel->role = $data['role'];
+            }
+            if ($data['password'] !== null && $data['password'] !== '') {
+                $userModel->password = $data['password'];
+            }
+            $userModel->save();
 
-        if (session()->has('bookmarks.users.update')) {
-            session()->put(
-                'bookmarks.users.view',
-                session()->get('bookmarks.users.update'),
-            );
-        }
-        session()->forget('bookmarks.users.update');
+            if (session()->has('bookmarks.users.update')) {
+                session()->put(
+                    'bookmarks.users.view',
+                    session()->get('bookmarks.users.update'),
+                );
+            }
+            session()->forget('bookmarks.users.update');
 
-        return redirect()->route('users.view', ['user' => $userModel->email])
-            ->with('status', "User {$userModel->email} was updated.");
+            return redirect()->route('users.view', ['user' => $userModel->email])
+                ->with('status', "User {$userModel->email} was updated.");
+        } catch (QueryException $excp) {
+            return redirect()->back()->withInput()->withErrors([
+                'alert' => $excp->errorInfo[2],
+            ]);
+        }
     }
 
     function delete(string $user): RedirectResponse
     {
         $userModel = $this->findUser($user);
         Gate::authorize('delete', $userModel);
-        $userModel->delete();
 
-        return redirect(session()->get('bookmarks.users.delete') ?? route('users.index'))
-            ->with('status', "User {$userModel->email} was deleted.");
+        try {
+            $userModel->delete();
+
+            return redirect(session()->get('bookmarks.users.delete') ?? route('users.index'))
+                ->with('status', "User {$userModel->email} was deleted.");
+        } catch (QueryException $excp) {
+            return redirect()->back()->withErrors([
+                'alert' => $excp->errorInfo[2],
+            ]);
+        }
     }
 
     function viewSelf(): View
@@ -170,22 +190,28 @@ class UserController extends SearchableController
             'password' => ['nullable', 'string', 'min:4'],
         ])->validate();
 
-        $user->name = $data['name'];
-        if ($data['password'] !== null && $data['password'] !== '') {
-            $user->password = $data['password'];
-        }
-        $user->save();
+        try {
+            $user->name = $data['name'];
+            if ($data['password'] !== null && $data['password'] !== '') {
+                $user->password = $data['password'];
+            }
+            $user->save();
 
-        if (session()->has('bookmarks.users.selves.update')) {
-            session()->put(
-                'bookmarks.users.selves.view',
-                session()->get('bookmarks.users.selves.update'),
-            );
-        }
-        session()->forget('bookmarks.users.selves.update');
+            if (session()->has('bookmarks.users.selves.update')) {
+                session()->put(
+                    'bookmarks.users.selves.view',
+                    session()->get('bookmarks.users.selves.update'),
+                );
+            }
+            session()->forget('bookmarks.users.selves.update');
 
-        return redirect()->route('users.selves.view')
-            ->with('status', 'Your information was updated.');
+            return redirect()->route('users.selves.view')
+                ->with('status', 'Your information was updated.');
+        } catch (QueryException $excp) {
+            return redirect()->back()->withInput()->withErrors([
+                'alert' => $excp->errorInfo[2],
+            ]);
+        }
     }
 
     private function findUser(string $email): User

@@ -75,6 +75,22 @@ class ProductTest extends TestCase
         ]);
     }
 
+    public function test_create_database_errors_are_shown_and_form_input_is_preserved(): void
+    {
+        $this->followingRedirects()
+            ->from('/products/create')
+            ->post('/products', [
+                'code' => 'PD001',
+                'name' => 'Duplicate product',
+                'category' => 'CT001',
+                'price' => 232,
+                'description' => 'Test description',
+            ])
+            ->assertOk()
+            ->assertSee('role="alert"', false)
+            ->assertSee('value="Duplicate product"', false);
+    }
+
     public function test_product_can_be_updated_with_a_flash_message_and_forwarded_back_link(): void
     {
         $this->withSession([
@@ -95,6 +111,48 @@ class ProductTest extends TestCase
             'code' => 'PD001',
             'name' => 'Updated product',
         ]);
+    }
+
+    public function test_duplicate_product_code_error_preserves_update_form_input(): void
+    {
+        $this->followingRedirects()
+            ->from('/products/PD001/update')
+            ->post('/products/PD001', [
+                'code' => 'PD002',
+                'name' => 'Attempted product name',
+                'category' => 'CT003',
+                'price' => 1345,
+                'description' => 'Attempted product description',
+            ])
+            ->assertOk()
+            ->assertSee('role="alert"', false)
+            ->assertSee('products.code', false)
+            ->assertSee('value="PD002"', false)
+            ->assertSee('value="Attempted product name"', false)
+            ->assertSee('value="CT003" selected', false)
+            ->assertSee('value="1345"', false)
+            ->assertSee('Attempted product description');
+    }
+
+    public function test_missing_required_description_shows_database_error_and_preserves_other_input(): void
+    {
+        $this->followingRedirects()
+            ->from('/products/PD001/update')
+            ->post('/products/PD001', [
+                'code' => 'PD001',
+                'name' => 'Updated name',
+                'category' => 'CT003',
+                'price' => 345,
+                'description' => '',
+            ])
+            ->assertOk()
+            ->assertSee('role="alert"', false)
+            ->assertSee('products.description', false)
+            ->assertSee('value="PD001"', false)
+            ->assertSee('value="Updated name"', false)
+            ->assertSee('value="CT003" selected', false)
+            ->assertSee('value="345"', false)
+            ->assertSee('<textarea id="product-description" name="description" rows="8" required></textarea>', false);
     }
 
     public function test_product_can_be_deleted_with_a_flash_message_and_bookmarked_redirect(): void

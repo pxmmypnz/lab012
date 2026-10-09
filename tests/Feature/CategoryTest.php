@@ -58,6 +58,20 @@ class CategoryTest extends TestCase
             ->assertSessionMissing('bookmarks.categories.create');
     }
 
+    public function test_category_database_errors_show_alerts_and_preserve_create_input(): void
+    {
+        $this->followingRedirects()
+            ->from('/categories/create')
+            ->post('/categories', [
+                'code' => 'CT001',
+                'name' => 'Duplicate Category',
+                'description' => 'Test description',
+            ])
+            ->assertOk()
+            ->assertSee('role="alert"', false)
+            ->assertSee('value="Duplicate Category"', false);
+    }
+
     public function test_category_can_be_updated_with_a_status_and_forwarded_back_link(): void
     {
         $this->withSession([
@@ -71,6 +85,20 @@ class CategoryTest extends TestCase
             ->assertSessionHas('status', 'Category CT001 was updated.')
             ->assertSessionHas('bookmarks.categories.view', '/categories?term=php')
             ->assertSessionMissing('bookmarks.categories.update');
+    }
+
+    public function test_category_database_errors_show_alerts_and_preserve_update_input(): void
+    {
+        $this->followingRedirects()
+            ->from('/categories/CT001/update')
+            ->post('/categories/CT001', [
+                'code' => 'CT002',
+                'name' => 'Duplicate Category',
+                'description' => 'Updated description',
+            ])
+            ->assertOk()
+            ->assertSee('role="alert"', false)
+            ->assertSee('value="Duplicate Category"', false);
     }
 
     public function test_category_can_be_deleted_with_a_status_and_bookmarked_redirect(): void

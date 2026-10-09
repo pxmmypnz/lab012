@@ -61,6 +61,23 @@ class ShopTest extends TestCase
             ->assertSessionMissing('bookmarks.shops.create');
     }
 
+    public function test_shop_database_errors_show_alerts_and_preserve_create_input(): void
+    {
+        $this->followingRedirects()
+            ->from('/shops/create')
+            ->post('/shops', [
+                'code' => 'SH001',
+                'name' => 'Duplicate Shop',
+                'owner' => 'Test Owner',
+                'latitude' => 18.8,
+                'longitude' => 98.9,
+                'address' => 'Test address',
+            ])
+            ->assertOk()
+            ->assertSee('role="alert"', false)
+            ->assertSee('value="Duplicate Shop"', false);
+    }
+
     public function test_shop_can_be_updated_with_a_status_and_forwarded_back_link(): void
     {
         $this->withSession([
@@ -77,6 +94,23 @@ class ShopTest extends TestCase
             ->assertSessionHas('status', 'Shop SH001 was updated.')
             ->assertSessionHas('bookmarks.shops.view', '/shops?term=phanu')
             ->assertSessionMissing('bookmarks.shops.update');
+    }
+
+    public function test_shop_database_errors_show_alerts_and_preserve_update_input(): void
+    {
+        $this->followingRedirects()
+            ->from('/shops/SH001/update')
+            ->post('/shops/SH001', [
+                'code' => 'SH002',
+                'name' => 'Duplicate Shop',
+                'owner' => 'Updated Owner',
+                'latitude' => 18.8,
+                'longitude' => 98.9,
+                'address' => 'Updated address',
+            ])
+            ->assertOk()
+            ->assertSee('role="alert"', false)
+            ->assertSee('value="Duplicate Shop"', false);
     }
 
     public function test_shop_can_be_deleted_with_a_status_and_bookmarked_redirect(): void
