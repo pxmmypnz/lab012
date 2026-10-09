@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use App\Models\Category;
+use App\Models\Product;
 use Database\Seeders\ProductSeeder;
 use Database\Seeders\ProductShopSeeder;
 use Database\Seeders\ShopSeeder;
@@ -184,6 +186,22 @@ class CategoryTest extends TestCase
                 'bookmarks.categories.add-products-form',
                 url('/categories/CT001/products'),
             );
+    }
+
+    public function test_category_products_term_search_matches_product_names_only(): void
+    {
+        Product::create([
+            'code' => 'TEST-NO-PHP',
+            'name' => 'JavaScript Handbook',
+            'category_id' => Category::where('code', 'CT001')->firstOrFail()->getKey(),
+            'price' => 250,
+            'description' => 'A JavaScript reference.',
+        ]);
+
+        $this->get('/categories/CT001/products?maxPrice=&minPrice=&term=php')
+            ->assertOk()
+            ->assertSee('PD001')
+            ->assertDontSee('TEST-NO-PHP');
     }
 
     public function test_category_add_products_form_excludes_products_in_category(): void

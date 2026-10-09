@@ -91,7 +91,6 @@ class UserController extends SearchableController
 
         return view('users.view', [
             'user' => $userModel,
-            'isSelf' => Auth::id() === $userModel->getKey(),
         ]);
     }
 
@@ -101,7 +100,6 @@ class UserController extends SearchableController
 
         return view('users.update-form', [
             'user' => $userModel,
-            'isSelf' => Auth::id() === $userModel->getKey(),
         ]);
     }
 
@@ -110,12 +108,12 @@ class UserController extends SearchableController
         ServerRequestInterface $request,
     ): RedirectResponse {
         $userModel = $this->findUser($user);
-        $isSelf = Auth::id() === $userModel->getKey();
+        $canUpdateRole = Gate::allows('updateRole', $userModel);
         $rules = [
             'name' => ['required', 'string', 'max:255'],
             'password' => ['nullable', 'string', 'min:4'],
         ];
-        if (!$isSelf) {
+        if ($canUpdateRole) {
             $rules['role'] = ['required', 'in:ADMIN,USER'];
         }
         $data = Validator::make((array) $request->getParsedBody(), [
@@ -124,7 +122,7 @@ class UserController extends SearchableController
 
         try {
             $userModel->name = $data['name'];
-            if (!$isSelf) {
+            if ($canUpdateRole) {
                 $userModel->role = $data['role'];
             }
             if ($data['password'] !== null && $data['password'] !== '') {

@@ -158,10 +158,16 @@ class CategoryController extends SearchableController
             ->with(['category'])
             ->withCount('shops');
 
+        $filterOptions = $productController->getFilterOptions();
+        $filterOptions['term'] = [
+            'name' => static fn(Builder $query, string $word) =>
+                $query->where('name', 'LIKE', "%{$word}%"),
+        ];
+
         $productController->filter(
             $query,
             $criteria,
-            $productController->getFilterOptions(),
+            $filterOptions,
         );
 
         return view('categories.view-products', [
