@@ -2,12 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Models\Product;
+use App\Models\Shop;
 use Database\Seeders\ProductSeeder;
 use Database\Seeders\ProductShopSeeder;
 use Database\Seeders\ShopSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use App\Models\Product;
-use App\Models\Shop;
 use Tests\TestCase;
 
 class ProductTest extends TestCase
@@ -43,20 +43,118 @@ class ProductTest extends TestCase
             ->assertSee('Build interactive, data driven websites');
     }
 
+    public function test_status_message_is_displayed_in_the_main_layout(): void
+    {
+        $this->withSession(['status' => 'Product PD005 was created.'])
+            ->get('/products')
+            ->assertOk()
+            ->assertSee('<div role="status">Product PD005 was created.</div>', false);
+    }
+
     public function test_product_can_be_created_with_a_category(): void
     {
-        $this->post('/products', [
+        $this->withSession([
+            'bookmarks.products.create' => '/products?term=php',
+        ])->post('/products', [
             'code' => 'PD005',
             'name' => 'Test product',
             'category' => 'CT001',
             'price' => 232,
             'description' => 'Test description',
-        ])->assertRedirect('/products/PD005');
+        ])
+            ->assertRedirect('/products/PD005')
+            ->assertSessionHas('status', 'Product PD005 was created.')
+            ->assertSessionHas('bookmarks.products.view', '/products?term=php')
+            ->assertSessionMissing('bookmarks.products.create');
 
         $this->assertDatabaseHas('products', [
             'code' => 'PD005',
             'category_id' => 1,
         ]);
+    }
+
+    public function test_product_can_be_updated_with_a_flash_message_and_forwarded_back_link(): void
+    {
+        $this->withSession([
+            'bookmarks.products.update' => '/products?term=php',
+        ])->post('/products/PD001', [
+            'code' => 'PD001',
+            'name' => 'Updated product',
+            'category' => 'CT001',
+            'price' => 123,
+            'description' => 'Updated description',
+        ])
+            ->assertRedirect('/products/PD001')
+            ->assertSessionHas('status', 'Product PD001 was updated.')
+            ->assertSessionHas('bookmarks.products.view', '/products?term=php')
+            ->assertSessionMissing('bookmarks.products.update');
+
+        $this->assertDatabaseHas('products', [
+            'code' => 'PD001',
+            'name' => 'Updated product',
+        ]);
+    }
+
+    public function test_product_can_be_deleted_with_a_flash_message_and_bookmarked_redirect(): void
+    {
+        $this->withSession([
+            'bookmarks.products.delete' => '/products?term=php',
+        ])->post('/products/PD001/delete')
+            ->assertRedirect('/products?term=php')
+            ->assertSessionHas('status', 'Product PD001 was deleted.');
+
+        $this->assertDatabaseMissing('products', ['code' => 'PD001']);
+    }
+
+    public function test_shop_can_be_added_to_and_removed_from_a_product_with_status_messages(): void
+    {
+        $this->post('/products/PD001/shops', ['shop' => 'SH003'])
+            ->assertRedirect()
+            ->assertSessionHas('status', 'Shop SH003 was added to Product PD001.');
+
+        $this->post('/products/PD001/shops/remove', ['shop' => 'SH003'])
+            ->assertRedirect()
+            ->assertSessionHas('status', 'Shop SH003 was removed from Product PD001.');
+    }
+
+    public function test_product_shop_pages_preserve_their_back_links(): void
+    {
+        $this->get('/products/PD001')
+            ->assertOk()
+            ->assertSessionHas('bookmarks.products.view-shops', url('/products/PD001'));
+
+        $this->get('/products/PD001/shops?term=shop')
+            ->assertOk()
+            ->assertSee('href="'.url('/products/PD001').'"', false)
+            ->assertSessionHas(
+                'bookmarks.products.add-shops-form',
+                url('/products/PD001/shops?term=shop'),
+            )
+            ->assertSessionHas('bookmarks.shops.view', url('/products/PD001/shops?term=shop'));
+
+        $this->get('/products/PD001/shops/add')
+            ->assertOk()
+            ->assertSessionHas('bookmarks.shops.view', url('/products/PD001/shops/add'));
+    }
+
+    public function test_update_form_cancel_link_uses_its_bookmark(): void
+    {
+        $this->withSession([
+            'bookmarks.products.update-form' => '/products?term=php',
+        ])->get('/products/PD001/update')
+            ->assertOk()
+            ->assertSee('href="/products?term=php"', false);
+    }
+
+    public function test_product_detail_bookmarks_update_form_and_return_url(): void
+    {
+        $this->withSession([
+            'bookmarks.products.view' => '/products?term=php',
+        ])->get('/products/PD001')
+            ->assertOk()
+            ->assertSessionHas('bookmarks.products.delete', '/products?term=php')
+            ->assertSessionHas('bookmarks.products.update-form', url('/products/PD001'))
+            ->assertSessionHas('bookmarks.products.update', '/products?term=php');
     }
 
     public function test_unknown_product_returns_not_found(): void

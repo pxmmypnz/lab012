@@ -65,9 +65,17 @@ class ShopController extends SearchableController
     {
         $shop = Shop::create($request->getParsedBody());
 
+        if (session()->has('bookmarks.shops.create')) {
+            session()->put(
+                'bookmarks.shops.view',
+                session()->get('bookmarks.shops.create'),
+            );
+        }
+        session()->forget('bookmarks.shops.create');
+
         return redirect()->route('shops.view', [
             'shop' => $shop->code,
-        ]);
+        ])->with('status', "Shop {$shop->code} was created.");
     }
 
     function showUpdateForm(string $shop): View
@@ -88,9 +96,17 @@ class ShopController extends SearchableController
         $shopModel->fill($request->getParsedBody());
         $shopModel->save();
 
+        if (session()->has('bookmarks.shops.update')) {
+            session()->put(
+                'bookmarks.shops.view',
+                session()->get('bookmarks.shops.update'),
+            );
+        }
+        session()->forget('bookmarks.shops.update');
+
         return redirect()->route('shops.view', [
             'shop' => $shopModel->code,
-        ]);
+        ])->with('status', "Shop {$shopModel->code} was updated.");
     }
 
     function delete(string $shop): RedirectResponse
@@ -98,7 +114,9 @@ class ShopController extends SearchableController
         $shopModel = $this->find($shop);
         $shopModel->delete();
 
-        return redirect()->route('shops.list');
+        return redirect(
+            session()->get('bookmarks.shops.delete') ?? route('shops.view', ['shop' => $shop]),
+        )->with('status', "Shop {$shopModel->code} was deleted.");
     }
 
     /**
@@ -195,7 +213,8 @@ class ShopController extends SearchableController
 
         $shop->products()->attach($product);
 
-        return redirect()->back();
+        return redirect()->back()
+            ->with('status', "Product {$product->code} was added to Shop {$shop->code}.");
     }
 
     /**
@@ -211,6 +230,7 @@ class ShopController extends SearchableController
         $product = $shop->products()->where('code', $data['product'])->firstOrFail();
         $shop->products()->detach($product);
 
-        return redirect()->back();
+        return redirect()->back()
+            ->with('status', "Product {$product->code} was removed from Shop {$shop->code}.");
     }
 }

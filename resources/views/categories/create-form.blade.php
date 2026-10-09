@@ -15,6 +15,10 @@
 
         <div class="app-cmp-form-actions">
             <button class="app-cl-button app-cl-primary app-cl-filled" type="submit">Create</button>
+            <a class="app-cl-button"
+                href="{{ session()->get('bookmarks.categories.create-form') ?? route('categories.index') }}">
+                Cancel
+            </a>
         </div>
     </form>
 @endsection

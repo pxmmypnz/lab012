@@ -8,6 +8,7 @@
             @php
                 session()->put('bookmarks.products.create-form', url()->full());
                 session()->put('bookmarks.products.create', session()->get('bookmarks.products.create-form'));
+                session()->put('bookmarks.categories.view', url()->full());
             @endphp
 
 

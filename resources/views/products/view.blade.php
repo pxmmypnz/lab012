@@ -2,6 +2,9 @@
 
 @php
     session()->put('bookmarks.products.delete', session()->get('bookmarks.products.view'));
+    session()->put('bookmarks.products.view-shops', url()->full());
+    session()->put('bookmarks.products.update-form', url()->full());
+    session()->put('bookmarks.products.update', session()->get('bookmarks.products.view'));
 @endphp
 
 @section('header')

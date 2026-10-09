@@ -6,11 +6,6 @@
     <div class="app-cmp-form-actions">
         <nav aria-label="Product shop actions" class="app-cmp-form-actions">
             @php
-                session()->put('bookmarks.products.view', url()->full());
-            @endphp
-
-
-            @php
                 session()->put('bookmarks.products.add-shops-form', url()->full());
             @endphp
 
@@ -44,7 +39,7 @@
         </fieldset>
     </form>
     <a class="app-cl-button"
-        href="{{ session()->get('bookmarks.products.view') ?? route('products.view', ['product' => $product->code]) }}">
+        href="{{ session()->get('bookmarks.products.view-shops') ?? route('products.view', ['product' => $product->code]) }}">
         &lt; Back
     </a>
 

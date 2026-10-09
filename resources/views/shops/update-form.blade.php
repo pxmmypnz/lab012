@@ -28,6 +28,10 @@
             <button class="app-cl-button app-cl-primary app-cl-filled" type="submit">
                 Update
             </button>
+            <a class="app-cl-button"
+                href="{{ session()->get('bookmarks.shops.update-form') ?? route('shops.view', ['shop' => $shop->code]) }}">
+                Cancel
+            </a>
         </div>
     </form>
 @endsection

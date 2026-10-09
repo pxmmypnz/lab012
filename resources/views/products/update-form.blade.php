@@ -28,6 +28,10 @@
 
         <div class="app-cmp-form-actions">
             <button class="app-cl-button app-cl-primary app-cl-filled" type="submit">Update</button>
+            <a class="app-cl-button"
+                href="{{ session()->get('bookmarks.products.update-form') ?? route('products.view', ['product' => $product->code]) }}">
+                Cancel
+            </a>
         </div>
     </form>
 @endsection

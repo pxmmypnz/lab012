@@ -5,12 +5,8 @@
 
     <div class="app-cmp-form-actions">
         <nav aria-label="Shop product actions" class="app-cmp-form-actions">
-            @php
-                session()->put('bookmarks.shops.view', url()->full());
-            @endphp
-
             <a class="app-cl-button"
-                href="{{ session()->get('bookmarks.shops.view') ?? route('shops.view', ['shop' => $shop->code]) }}">
+                href="{{ session()->get('bookmarks.shops.view-products') ?? route('shops.view', ['shop' => $shop->code]) }}">
                 &lt; Back
             </a>
 
@@ -77,6 +73,7 @@
         <tbody>
             @php
                 session()->put('bookmarks.products.view', url()->full());
+                session()->put('bookmarks.categories.view', url()->full());
             @endphp
 
             @foreach ($products as $product)

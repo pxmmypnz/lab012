@@ -59,6 +59,15 @@ body>main {
     text-align: center;
 }
 
+.app-cmp-notifications [role="status"] {
+    margin: var(--app-gap) 0;
+    padding: var(--app-gap);
+    border: 1px solid #287a3d;
+    border-radius: 6px;
+    background-color: #edf8ef;
+    color: #1d572b;
+}
+
 /* ==========================================================================
    Components
    ========================================================================== */

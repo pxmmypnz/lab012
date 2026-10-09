@@ -3,6 +3,12 @@
 @section('header')
     @parent
 
+    @php
+        session()->put('bookmarks.categories.create-form', url()->full());
+        session()->put('bookmarks.categories.create', session()->get('bookmarks.categories.create-form'));
+        session()->put('bookmarks.categories.view', url()->full());
+    @endphp
+
     <search>
         <form action="{{ route('categories.list') }}" method="get" class="app-cmp-search-form">
             <fieldset>

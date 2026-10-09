@@ -24,15 +24,15 @@ class ProductController extends SearchableController
         return [
             'term' => [
                 'code' => static fn(Builder $query, string $word) =>
-                $query->where('code', 'LIKE', "%{$word}%"),
+                    $query->where('code', 'LIKE', "%{$word}%"),
 
                 'name' => static fn(Builder $query, string $word) =>
-                $query->where('name', 'LIKE', "%{$word}%")
-                    ->orWhereHas(
-                        'category',
-                        static fn(Builder $categoryQuery) =>
-                        $categoryQuery->where('name', 'LIKE', "%{$word}%"),
-                    ),
+                    $query->where('name', 'LIKE', "%{$word}%")
+                        ->orWhereHas(
+                            'category',
+                            static fn(Builder $categoryQuery) =>
+                                $categoryQuery->where('name', 'LIKE', "%{$word}%"),
+                        ),
             ],
         ];
     }
@@ -92,6 +92,14 @@ class ProductController extends SearchableController
         $product->category()->associate($category);
         $product->save();
 
+        if (session()->has('bookmarks.products.create')) {
+            session()->put(
+                'bookmarks.products.view',
+                session()->get('bookmarks.products.create'),
+            );
+        }
+        session()->forget('bookmarks.products.create');
+
         return redirect()
             ->route('products.view', [
                 'product' => $product->code,
@@ -121,6 +129,14 @@ class ProductController extends SearchableController
         $product->fill($data);
         $product->category()->associate($category);
         $product->save();
+
+        if (session()->has('bookmarks.products.update')) {
+            session()->put(
+                'bookmarks.products.view',
+                session()->get('bookmarks.products.update'),
+            );
+        }
+        session()->forget('bookmarks.products.update');
 
         return redirect()
             ->route('products.view', [
@@ -238,7 +254,8 @@ class ProductController extends SearchableController
 
         $product->shops()->attach($shop);
 
-        return redirect()->back();
+        return redirect()->back()
+            ->with('status', "Shop {$shop->code} was added to Product {$product->code}.");
     }
 
     function removeShop(
@@ -251,6 +268,7 @@ class ProductController extends SearchableController
         $shop = $product->shops()->where('code', $data['shop'])->firstOrFail();
         $product->shops()->detach($shop);
 
-        return redirect()->back();
+        return redirect()->back()
+            ->with('status', "Shop {$shop->code} was removed from Product {$product->code}.");
     }
 }

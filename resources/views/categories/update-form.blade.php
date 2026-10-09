@@ -29,6 +29,10 @@
             <button class="app-cl-button app-cl-primary app-cl-filled" type="submit">
                 Update
             </button>
+            <a class="app-cl-button"
+                href="{{ session()->get('bookmarks.categories.update-form') ?? route('categories.view', ['category' => $category->code]) }}">
+                Cancel
+            </a>
         </div>
     </form>
 @endsection

@@ -7,24 +7,24 @@
         <nav aria-label="Shop actions" class="app-cmp-form-actions">
             @php
                 session()->put('bookmarks.shops.view-products', url()->full());
+                session()->put('bookmarks.shops.update-form', url()->full());
+                session()->put('bookmarks.shops.update', session()->get('bookmarks.shops.view'));
+                session()->put('bookmarks.shops.delete', session()->get('bookmarks.shops.view'));
             @endphp
+
+            <a class="app-cl-button"
+                href="{{ session()->get('bookmarks.shops.view') ?? route('shops.index') }}">
+                &lt; Back
+            </a>
 
             <a class="app-cl-button app-cl-primary app-cl-filled"
                 href="{{ route('shops.view-products', ['shop' => $shop->code]) }}">
                 View Products
             </a>
 
-            @php
-                session()->put('bookmarks.shops.update-form', url()->full());
-            @endphp
-
             <a class="app-cl-button" href="{{ route('shops.update-form', ['shop' => $shop->code]) }}">
                 Update
             </a>
-
-            @php
-                session()->put('bookmarks.shops.delete', url()->full());
-            @endphp
 
             <form action="{{ route('shops.delete', ['shop' => $shop->code]) }}" method="post" style="display: inline;">
                 @csrf

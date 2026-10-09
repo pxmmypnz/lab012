@@ -3,14 +3,21 @@
 @section('header')
     @parent
 
+    @php
+        session()->put('bookmarks.categories.view-products', url()->full());
+        session()->put('bookmarks.categories.update-form', url()->full());
+        session()->put('bookmarks.categories.update', session()->get('bookmarks.categories.view'));
+        session()->put('bookmarks.categories.delete', session()->get('bookmarks.categories.view'));
+    @endphp
+
     <div class="app-cmp-form-actions">
         <nav aria-label="Category actions" class="app-cmp-form-actions"
             style="display: flex; flex-direction: row; align-items: center;">
 
-            {{-- Store current Category View URL into session for child pages to link back to --}}
-            @php
-                session()->put('bookmarks.categories.view', url()->full());
-            @endphp
+            <a class="app-cl-button"
+                href="{{ session()->get('bookmarks.categories.view') ?? route('categories.index') }}">
+                &lt; Back
+            </a>
 
             <a class="app-cl-button app-cl-primary"
                 href="{{ route('categories.view-products', ['category' => $category->code]) }}" style="white-space: nowrap;">

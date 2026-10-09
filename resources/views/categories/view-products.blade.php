@@ -7,7 +7,7 @@
         <nav aria-label="Category product actions" class="app-cmp-form-actions">
             {{-- Back button links back to category view --}}
             <a class="app-cl-button"
-                href="{{ session()->get('bookmarks.categories.view') ?? route('categories.view', ['category' => $category->code]) }}">
+                href="{{ session()->get('bookmarks.categories.view-products') ?? route('categories.view', ['category' => $category->code]) }}">
                 &lt; Back
             </a>
 

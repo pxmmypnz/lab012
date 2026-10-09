@@ -8,6 +8,7 @@
             @php
                 session()->put('bookmarks.shops.create-form', url()->full());
                 session()->put('bookmarks.shops.create', session()->get('bookmarks.shops.create-form'));
+                session()->put('bookmarks.shops.view', url()->full());
             @endphp
 
 
@@ -51,10 +52,6 @@
             </tr>
         </thead>
         <tbody>
-            @php
-                session()->put('bookmarks.shops.view', url()->full());
-            @endphp
-
             @foreach ($shops as $shop)
                 <tr>
                     <th class="app-cl-code">

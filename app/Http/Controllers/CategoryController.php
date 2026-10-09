@@ -51,9 +51,17 @@ class CategoryController extends SearchableController
     {
         $category = Category::create($request->getParsedBody());
 
+        if (session()->has('bookmarks.categories.create')) {
+            session()->put(
+                'bookmarks.categories.view',
+                session()->get('bookmarks.categories.create'),
+            );
+        }
+        session()->forget('bookmarks.categories.create');
+
         return redirect()->route('categories.view', [
             'category' => $category->code,
-        ]);
+        ])->with('status', "Category {$category->code} was created.");
     }
 
     function view(string $category): View
@@ -80,16 +88,27 @@ class CategoryController extends SearchableController
         $category->fill($request->getParsedBody());
         $category->save();
 
+        if (session()->has('bookmarks.categories.update')) {
+            session()->put(
+                'bookmarks.categories.view',
+                session()->get('bookmarks.categories.update'),
+            );
+        }
+        session()->forget('bookmarks.categories.update');
+
         return redirect()->route('categories.view', [
             'category' => $category->code,
-        ]);
+        ])->with('status', "Category {$category->code} was updated.");
     }
 
     function delete(string $category): RedirectResponse
     {
-        $this->find($category)->delete();
+        $categoryModel = $this->find($category);
+        $categoryModel->delete();
 
-        return redirect()->route('categories.list');
+        return redirect(
+            session()->get('bookmarks.categories.delete') ?? route('categories.view', ['category' => $category]),
+        )->with('status', "Category {$categoryModel->code} was deleted.");
     }
 
     /**
@@ -168,6 +187,7 @@ class CategoryController extends SearchableController
         $product->category()->associate($category);
         $product->save();
 
-        return redirect()->back();
+        return redirect()->back()
+            ->with('status', "Product {$product->code} was added to Category {$category->code}.");
     }
 }

@@ -63,6 +63,7 @@
         <tbody>
             @php
                 session()->put('bookmarks.products.view', url()->full());
+                session()->put('bookmarks.categories.view', url()->full());
             @endphp
 
             @foreach ($products as $product)
